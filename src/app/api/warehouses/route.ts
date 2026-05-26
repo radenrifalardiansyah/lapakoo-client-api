@@ -28,21 +28,28 @@ export async function POST(request: NextRequest) {
     if (error) return error;
 
     const body = await request.json();
-    const { code, name, address, city, pic, phone, is_primary } = body;
+    const { code, name, address, country, province, province_id, city, city_id, district, district_id, village, pic, phone, is_primary } = body;
 
     if (!code || !name) return errorResponse("code dan name wajib diisi");
 
     const { data, error: dbError } = await supabase!
       .from("warehouses")
       .insert({
-        tenant_id:  seller!.tenant_id,
-        code:       code.toUpperCase(),
+        tenant_id:   seller!.tenant_id,
+        code:        code.toUpperCase(),
         name,
-        address:    address    ?? null,
-        city:       city       ?? null,
-        pic:        pic        ?? null,
-        phone:      phone      ?? null,
-        is_primary: is_primary ?? false,
+        address:     address     ?? null,
+        country:     country     ?? 'Indonesia',
+        province:    province    ?? null,
+        province_id: province_id ?? null,
+        city:        city        ?? null,
+        city_id:     city_id     ?? null,
+        district:    district    ?? null,
+        district_id: district_id ?? null,
+        village:     village     ?? null,
+        pic:         pic         ?? null,
+        phone:       phone       ?? null,
+        is_primary:  is_primary  ?? false,
       })
       .select()
       .single();

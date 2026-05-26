@@ -33,16 +33,23 @@ export async function PUT(request: NextRequest, { params }: Params) {
     if (error) return error;
 
     const body = await request.json();
-    const { name, address, city, pic, phone, is_primary, active } = body;
+    const { name, address, country, province, province_id, city, city_id, district, district_id, village, pic, phone, is_primary, active } = body;
 
     const patch: Record<string, unknown> = {};
-    if (name       !== undefined) patch.name       = name;
-    if (address    !== undefined) patch.address    = address;
-    if (city       !== undefined) patch.city       = city;
-    if (pic        !== undefined) patch.pic        = pic;
-    if (phone      !== undefined) patch.phone      = phone;
-    if (is_primary !== undefined) patch.is_primary = is_primary;
-    if (active     !== undefined) patch.active     = active;
+    if (name        !== undefined) patch.name        = name;
+    if (address     !== undefined) patch.address     = address;
+    if (country     !== undefined) patch.country     = country;
+    if (province    !== undefined) patch.province    = province;
+    if (province_id !== undefined) patch.province_id = province_id;
+    if (city        !== undefined) patch.city        = city;
+    if (city_id     !== undefined) patch.city_id     = city_id;
+    if (district    !== undefined) patch.district    = district;
+    if (district_id !== undefined) patch.district_id = district_id;
+    if (village     !== undefined) patch.village     = village;
+    if (pic         !== undefined) patch.pic         = pic;
+    if (phone       !== undefined) patch.phone       = phone;
+    if (is_primary  !== undefined) patch.is_primary  = is_primary;
+    if (active      !== undefined) patch.active      = active;
 
     const { data, error: dbError } = await supabase!
       .from("warehouses")
