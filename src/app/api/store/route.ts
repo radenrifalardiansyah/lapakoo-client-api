@@ -11,7 +11,8 @@ export async function GET() {
     // Pakai admin client agar tidak tergantung RLS pada store_settings
     const supabase = createAdminClient();
 
-    const { data, error: dbError } = await supabase
+    // Coba baca store_settings — jika belum ada, buat dulu (upsert)
+    let { data, error: dbError } = await supabase
       .from("store_settings")
       .select(`
         *,
@@ -24,6 +25,26 @@ export async function GET() {
       `)
       .eq("tenant_id", seller!.tenant_id)
       .single();
+
+    // Row belum ada → buat dan fetch ulang
+    if (!data && (dbError?.code === "PGRST116" || dbError?.code === "406")) {
+      await supabase.from("store_settings").insert({ tenant_id: seller!.tenant_id });
+      const refetch = await supabase
+        .from("store_settings")
+        .select(`
+          *,
+          tenants(
+            id, subdomain, store_name, owner_name, logo_url, primary_color, status, package_id,
+            store_category_id,
+            store_categories(id, name, description, icon, sort_order),
+            packages(id, name, price, features, max_products, max_orders, max_users, max_warehouses)
+          )
+        `)
+        .eq("tenant_id", seller!.tenant_id)
+        .single();
+      data     = refetch.data;
+      dbError  = refetch.error;
+    }
 
     if (dbError || !data) return errorResponse("Pengaturan toko tidak ditemukan", 404);
 
@@ -66,10 +87,10 @@ export async function PUT(request: NextRequest) {
       if (val !== undefined) patch[key] = val;
     }
 
+    // Upsert: update jika row ada, insert jika belum
     const { data, error: dbError } = await supabase
       .from("store_settings")
-      .update(patch)
-      .eq("tenant_id", seller!.tenant_id)
+      .upsert({ tenant_id: seller!.tenant_id, ...patch }, { onConflict: "tenant_id" })
       .select()
       .single();
 
