@@ -33,9 +33,10 @@ export async function PUT(request: NextRequest, { params }: Params) {
     if (error) return error;
 
     const body = await request.json();
-    const { name, address, country, province, province_id, city, city_id, district, district_id, village, pic, phone, is_primary, active } = body;
+    const { code, name, address, country, province, province_id, city, city_id, district, district_id, village, pic, phone, is_primary, active } = body;
 
     const patch: Record<string, unknown> = {};
+    if (code        !== undefined) patch.code        = String(code).toUpperCase();
     if (name        !== undefined) patch.name        = name;
     if (address     !== undefined) patch.address     = address;
     if (country     !== undefined) patch.country     = country;
