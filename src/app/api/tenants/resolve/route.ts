@@ -15,7 +15,11 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("tenants")
-      .select("id, subdomain, store_name, logo_url, primary_color, status")
+      .select(`
+        id, subdomain, store_name, logo_url, primary_color, status,
+        store_category_id,
+        store_categories(id, name, description, icon, sort_order)
+      `)
       .eq("subdomain", subdomain)
       .single();
 

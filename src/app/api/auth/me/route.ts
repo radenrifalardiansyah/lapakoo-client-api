@@ -11,7 +11,15 @@ export async function GET() {
 
     const { data: profile } = await supabase
       .from("tenant_users")
-      .select("*, tenants(id, subdomain, store_name, logo_url, primary_color, status)")
+      .select(`
+        *,
+        tenants(
+          id, subdomain, store_name, logo_url, primary_color, status,
+          store_category_id,
+          store_categories(id, name, description, icon, sort_order),
+          packages(id, name, price, features, max_products, max_orders, max_users, max_warehouses)
+        )
+      `)
       .eq("user_id", user.id)
       .single();
 
