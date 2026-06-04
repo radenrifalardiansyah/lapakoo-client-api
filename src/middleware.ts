@@ -2,7 +2,13 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/api/auth/register", "/api/auth/login", "/api/tenants/resolve"];
+const PUBLIC_ROUTES = [
+  "/api/auth/register",
+  "/api/auth/login",
+  "/api/auth/refresh",      // Perlu public: menukar refresh_token saat access_token expired
+  "/api/tenants/resolve",
+  "/api/store-categories",  // Data kategori toko bersifat public
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
