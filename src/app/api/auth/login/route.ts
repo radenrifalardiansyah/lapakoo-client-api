@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from("tenant_users")
-      .select("id, tenant_id, role, name, avatar_url, status, tenants(id, subdomain, store_name, logo_url, status)")
+      .select("id, tenant_id, role, name, avatar_url, status, tenants(id, subdomain, store_name, logo_url, primary_color, status, package_id, packages(id))")
       .eq("user_id", data.user.id)
       .single();
 

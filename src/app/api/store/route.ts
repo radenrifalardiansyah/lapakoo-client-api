@@ -12,7 +12,7 @@ export async function GET() {
       .select(`
         *,
         tenants(
-          id, subdomain, store_name, logo_url, primary_color, status,
+          id, subdomain, store_name, owner_name, logo_url, primary_color, status, package_id,
           store_category_id,
           store_categories(id, name, description, icon, sort_order),
           packages(id, name, price, features, max_products, max_orders, max_users, max_warehouses)
@@ -68,10 +68,12 @@ export async function PUT(request: NextRequest) {
 
     if (dbError) return errorResponse(dbError.message);
 
-    // Update tenants jika store_name atau logo_url dikirim
+    // Update tenants jika ada field yang berkaitan
     const tenantPatch: Record<string, unknown> = {};
     if (store_name !== undefined) tenantPatch.store_name = store_name;
     if (logo_url !== undefined) tenantPatch.logo_url = logo_url;
+    // Sync theme_color ke primary_color agar storefront menggunakan warna terbaru
+    if (theme_color !== undefined) tenantPatch.primary_color = theme_color;
 
     if (Object.keys(tenantPatch).length > 0) {
       const { error: tenantError } = await supabase!
