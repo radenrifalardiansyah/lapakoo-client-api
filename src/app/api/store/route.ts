@@ -1,13 +1,17 @@
 import { NextRequest } from "next/server";
 import { getAuthenticatedSeller } from "@/lib/utils/auth";
+import { createAdminClient } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/utils/response";
 
 export async function GET() {
   try {
-    const { seller, supabase, error } = await getAuthenticatedSeller();
+    const { seller, error } = await getAuthenticatedSeller();
     if (error) return error;
 
-    const { data, error: dbError } = await supabase!
+    // Pakai admin client agar tidak tergantung RLS pada store_settings
+    const supabase = createAdminClient();
+
+    const { data, error: dbError } = await supabase
       .from("store_settings")
       .select(`
         *,
@@ -31,7 +35,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { seller, supabase, error } = await getAuthenticatedSeller();
+    const { seller, error } = await getAuthenticatedSeller();
     if (error) return error;
 
     const body = await request.json();
@@ -44,6 +48,9 @@ export async function PUT(request: NextRequest) {
       notif_email_new_order, notif_sms_payment, notif_push,
       notif_email_low_stock, notif_email_promotion,
     } = body;
+
+    // Pakai admin client agar tidak tergantung RLS
+    const supabase = createAdminClient();
 
     // Update store_settings
     const patch: Record<string, unknown> = {};
@@ -59,7 +66,7 @@ export async function PUT(request: NextRequest) {
       if (val !== undefined) patch[key] = val;
     }
 
-    const { data, error: dbError } = await supabase!
+    const { data, error: dbError } = await supabase
       .from("store_settings")
       .update(patch)
       .eq("tenant_id", seller!.tenant_id)
@@ -68,15 +75,15 @@ export async function PUT(request: NextRequest) {
 
     if (dbError) return errorResponse(dbError.message);
 
-    // Update tenants jika ada field yang berkaitan
+    // Update tenants untuk field yang disimpan di tabel tenants
     const tenantPatch: Record<string, unknown> = {};
     if (store_name !== undefined) tenantPatch.store_name = store_name;
-    if (logo_url !== undefined) tenantPatch.logo_url = logo_url;
-    // Sync theme_color ke primary_color agar storefront menggunakan warna terbaru
+    if (logo_url !== undefined)   tenantPatch.logo_url   = logo_url;
+    // Sync theme_color → primary_color agar storefront pakai warna terbaru
     if (theme_color !== undefined) tenantPatch.primary_color = theme_color;
 
     if (Object.keys(tenantPatch).length > 0) {
-      const { error: tenantError } = await supabase!
+      const { error: tenantError } = await supabase
         .from("tenants")
         .update(tenantPatch)
         .eq("id", seller!.tenant_id);

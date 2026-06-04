@@ -6,10 +6,13 @@ import { successResponse, errorResponse } from "@/lib/utils/response";
 // GET /api/tenants/store-category — kategori toko aktif tenant saat ini
 export async function GET() {
   try {
-    const { seller, supabase, error } = await getAuthenticatedSeller();
+    const { seller, error } = await getAuthenticatedSeller();
     if (error) return error;
 
-    const { data, error: dbError } = await supabase!
+    // Pakai admin client agar tidak tergantung RLS pada tenants
+    const supabase = createAdminClient();
+
+    const { data, error: dbError } = await supabase
       .from("tenants")
       .select("store_category_id, store_categories(*)")
       .eq("id", seller!.tenant_id)
