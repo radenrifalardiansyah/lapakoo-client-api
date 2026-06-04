@@ -36,6 +36,7 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const {
+      store_name, logo_url,
       description, address, city, province, postal_code,
       phone, email, website, operational_hours, theme_color, tagline,
       banner_url, show_reviews, show_best_sellers,
@@ -44,8 +45,9 @@ export async function PUT(request: NextRequest) {
       notif_email_low_stock, notif_email_promotion,
     } = body;
 
+    // Update store_settings
     const patch: Record<string, unknown> = {};
-    const fields = {
+    const settingsFields = {
       description, address, city, province, postal_code,
       phone, email, website, operational_hours, theme_color, tagline,
       banner_url, show_reviews, show_best_sellers,
@@ -53,7 +55,7 @@ export async function PUT(request: NextRequest) {
       notif_email_new_order, notif_sms_payment, notif_push,
       notif_email_low_stock, notif_email_promotion,
     };
-    for (const [key, val] of Object.entries(fields)) {
+    for (const [key, val] of Object.entries(settingsFields)) {
       if (val !== undefined) patch[key] = val;
     }
 
@@ -65,6 +67,20 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (dbError) return errorResponse(dbError.message);
+
+    // Update tenants jika store_name atau logo_url dikirim
+    const tenantPatch: Record<string, unknown> = {};
+    if (store_name !== undefined) tenantPatch.store_name = store_name;
+    if (logo_url !== undefined) tenantPatch.logo_url = logo_url;
+
+    if (Object.keys(tenantPatch).length > 0) {
+      const { error: tenantError } = await supabase!
+        .from("tenants")
+        .update(tenantPatch)
+        .eq("id", seller!.tenant_id);
+
+      if (tenantError) return errorResponse(tenantError.message);
+    }
 
     return successResponse(data);
   } catch {
